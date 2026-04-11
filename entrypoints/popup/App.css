@@ -1,217 +1,462 @@
+/* ── Design tokens ─────────────────────────────────────────────────── */
+:root {
+  --bg:           #000000;
+  --surface-1:    #1c1c1e;  /* card */
+  --surface-2:    #2c2c2e;  /* elevated / hover */
+  --surface-3:    #3a3a3c;  /* input fill */
+  --border:       rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --text-primary:   #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.55);
+  --text-tertiary:  rgba(255, 255, 255, 0.28);
+  --accent:   #0a84ff;
+  --accent-dim: rgba(10, 132, 255, 0.18);
+  --danger:   #ff453a;
+  --success:  #30d158;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(255,255,255,0.06);
+  --shadow-pop:  0 16px 48px rgba(0,0,0,0.8), 0 0 0 0.5px rgba(255,255,255,0.08);
+  --transition: 0.15s ease;
+}
+
+/* ── Layout ────────────────────────────────────────────────────────── */
 .app {
-  width: 520px;
-  padding: 12px;
-  color: #e7e9ea;
+  width: 440px;
+  padding: 20px 16px 14px;
+  color: var(--text-primary);
+  background: var(--bg);
+  min-height: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .app.full-page {
-  width: min(1100px, 96vw);
-  margin: 0 auto;
+  width: min(860px, 96vw);
+  margin: 40px auto;
+  padding: 0;
+  min-height: unset;
 }
 
-h1 {
-  font-size: 18px;
-  margin: 0 0 4px;
-}
-
+/* ── Header ────────────────────────────────────────────────────────── */
 .header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 0 2px;
 }
 
-.icon-btn {
-  width: 30px;
-  height: 30px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  background: #202327;
-  border: 1px solid #2f3336;
-  border-radius: 8px;
+.header-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+h1 {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  margin: 0;
+  color: var(--text-primary);
 }
 
 .muted {
-  color: #8b98a5;
+  color: var(--text-secondary);
   font-size: 12px;
+  margin: 0;
 }
 
-.section {
-  border: 1px solid #2f3336;
-  border-radius: 10px;
-  padding: 8px;
-  margin-bottom: 8px;
-  background: #11171d;
-}
-
-.row {
-  display: flex;
-  gap: 8px;
+.icon-btn {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
   align-items: center;
-  margin: 6px 0;
+  justify-content: center;
+  background: var(--surface-1);
+  border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+  padding: 0;
 }
 
-.row-compact {
-  margin: 2px 0;
+.icon-btn:hover {
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+
+/* ── Reset form elements ───────────────────────────────────────────── */
+input,
+select,
+button {
+  font-family: inherit;
+  font-size: 13px;
+  border-radius: var(--radius-sm);
+  border: 0.5px solid var(--border-strong);
+  background: var(--surface-3);
+  color: var(--text-primary);
+  padding: 7px 11px;
+  outline: none;
+  transition: background var(--transition), border-color var(--transition),
+    box-shadow var(--transition);
+}
+
+input::placeholder {
+  color: var(--text-tertiary);
+}
+
+input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+  background: var(--surface-2);
+}
+
+select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='rgba(255,255,255,0.35)' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+}
+
+select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+button {
+  cursor: pointer;
+  font-weight: 500;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  border-color: transparent;
+  color: #fff;
+  letter-spacing: -0.1px;
+  white-space: nowrap;
+}
+
+button:hover {
+  filter: brightness(1.1);
+}
+
+button:active {
+  filter: brightness(0.9);
+  transform: scale(0.98);
+}
+
+button.secondary {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+button.secondary:hover {
+  background: var(--surface-3);
+  color: var(--text-primary);
+  filter: none;
+}
+
+button.danger {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--danger);
+}
+
+button.danger:hover {
+  background: rgba(255, 69, 58, 0.12);
+  border-color: rgba(255, 69, 58, 0.35);
+  filter: none;
+}
+
+/* ── Folders panel ─────────────────────────────────────────────────── */
+.folders-panel {
+  background: var(--surface-1);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--shadow-card);
 }
 
 .tabs {
   display: flex;
   gap: 6px;
-  overflow: auto;
-  padding-bottom: 2px;
+  overflow-x: auto;
+  padding-bottom: 1px;
+  scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tab-slot {
   display: flex;
+  flex-shrink: 0;
 }
 
 .tab {
-  background: #202327;
-  border: 1px solid #2f3336;
-  border-radius: 999px;
-  white-space: nowrap;
+  background: transparent;
+  border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 13px;
+  letter-spacing: -0.1px;
+  transition: background var(--transition), color var(--transition),
+    border-color var(--transition);
+}
+
+.tab:hover {
+  background: var(--surface-2);
+  color: var(--text-primary);
+  filter: none;
 }
 
 .tab.active {
-  background: #1d9bf0;
+  background: var(--accent);
+  border-color: transparent;
   color: #fff;
-  border-color: #1d9bf0;
-}
-
-.tabs-wrap {
-  position: relative;
+  box-shadow: 0 2px 8px rgba(10, 132, 255, 0.35);
 }
 
 .tab-edit-input {
-  width: 140px;
-  border-radius: 999px;
-  border: 1px solid #1d9bf0;
-  background: #16181c;
-  color: #e7e9ea;
+  width: 130px;
+  border-radius: var(--radius-pill);
+  border: 0.5px solid var(--accent);
+  background: var(--surface-2);
+  color: var(--text-primary);
+  font-size: 12px;
+  padding: 5px 13px;
+  box-shadow: 0 0 0 3px var(--accent-dim);
 }
 
+.new-folder-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  border-top: 0.5px solid var(--border);
+  padding-top: 12px;
+}
+
+.new-folder-row input {
+  flex: 1;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  border: 0.5px solid var(--border-strong);
+}
+
+.new-folder-row button {
+  font-size: 12px;
+  padding: 6px 14px;
+}
+
+/* ── Context menu ──────────────────────────────────────────────────── */
 .folder-context-menu {
   z-index: 10000;
-  min-width: 140px;
-  padding: 4px;
-  background: #16181c;
-  border: 1px solid #2f3336;
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  min-width: 152px;
+  padding: 5px;
+  background: rgba(28, 28, 30, 0.92);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-pop);
 }
 
 .folder-context-menu .menu-item {
   display: block;
   width: 100%;
   text-align: left;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   border: none;
   background: transparent;
-  color: #e7e9ea;
-  padding: 8px 10px;
-  font-size: 12px;
+  color: var(--text-primary);
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.1px;
+  transition: background var(--transition);
 }
 
 .folder-context-menu .menu-item:hover:not(:disabled) {
-  background: #202327;
+  background: var(--surface-2);
+  filter: none;
 }
 
 .folder-context-menu .menu-item.danger:not(:disabled) {
-  color: #f4212e;
+  color: var(--danger);
+  background: transparent;
+}
+
+.folder-context-menu .menu-item.danger:not(:disabled):hover {
+  background: rgba(255, 69, 58, 0.1);
 }
 
 .folder-context-menu .menu-item:disabled {
-  opacity: 0.4;
+  opacity: 0.3;
   cursor: not-allowed;
 }
 
-input,
-select,
-button {
-  border-radius: 8px;
-  border: 1px solid #2f3336;
-  background: #16181c;
-  color: #e7e9ea;
-  padding: 6px 8px;
-  font-size: 12px;
-}
-
-input {
-  flex: 1;
-}
-
-button {
-  cursor: pointer;
-  background: #1d9bf0;
-  border-radius: 9999px;
-}
-
-button.secondary {
-  background: #202327;
-}
-
-button.danger {
-  background: #f4212e;
-}
-
-.list {
-  max-height: 420px;
-  overflow: auto;
-  display: grid;
-  gap: 8px;
-  margin-top: 0;
-}
-
-.tweet {
-  border: 1px solid #2f3336;
-  border-radius: 10px;
-  padding: 10px;
-  background: #0f1419;
-}
-
-.tweet p {
-  margin: 8px 0;
-  white-space: pre-wrap;
-}
-
-.meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 8px;
-  font-size: 12px;
-  color: #8b98a5;
-}
-
-.meta-author {
+/* ── Tweet list ────────────────────────────────────────────────────── */
+.tweet-list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 8px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.app.full-page .tweet-list {
+  max-height: unset;
+}
+
+.tweet-empty {
+  text-align: center;
+  padding: 40px 0;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  letter-spacing: -0.1px;
+}
+
+/* ── Tweet card ────────────────────────────────────────────────────── */
+.tweet {
+  background: var(--surface-1);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: var(--shadow-card);
+  transition: border-color var(--transition);
+}
+
+.tweet:hover {
+  border-color: var(--border-strong);
+}
+
+/* author row */
+.tweet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.tweet-author {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
   min-width: 0;
 }
 
+.tweet-author strong {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tweet-author span {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+/* attachment icon */
 .tweet-attachment-icon {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #8b98a5;
-  margin-top: 1px;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text-secondary);
 }
 
 .tweet-attachment-icon svg {
   display: block;
 }
 
-.meta-end {
-  justify-content: flex-end;
+/* body */
+.tweet-body {
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.82);
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+  letter-spacing: -0.1px;
 }
 
-.status {
-  min-height: 16px;
-  margin: 4px 2px 0;
+/* footer row */
+.tweet-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 6px;
+  border-top: 0.5px solid var(--border);
+}
+
+.tweet-footer a {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent);
+  letter-spacing: -0.1px;
+}
+
+.tweet-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tweet-actions select {
+  font-size: 11px;
+  padding: 4px 24px 4px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+.tweet-actions select:focus {
+  color: var(--text-primary);
+}
+
+.tweet-actions button.danger {
+  font-size: 11px;
+  padding: 4px 10px;
+}
+
+/* ── Status bar ────────────────────────────────────────────────────── */
+.status-bar {
+  min-height: 14px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-align: center;
+  letter-spacing: -0.05px;
+  padding: 0 4px;
 }

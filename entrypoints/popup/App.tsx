@@ -200,134 +200,145 @@ function App({ fullPage = false }: AppProps) {
 
   return (
     <div className={`app${fullPage ? " full-page" : ""}`}>
+      {/* ── Header ── */}
       <div className="header">
-        <div>
-          <h1>Tweet Bookmarker</h1>
-          <p className="muted">Organize saved tweets in folders.</p>
+        <div className="header-title">
+          <h1>Bookmarks</h1>
+          <p className="muted">
+            {folders.find((f) => f.id === selectedFolder)
+              ? `${filteredRows.length} saved tweet${filteredRows.length !== 1 ? "s" : ""}`
+              : "Organize saved tweets"}
+          </p>
         </div>
         {!fullPage && (
           <button
             className="icon-btn"
             onClick={() => openManagerPage()}
-            title="Open manager in new tab"
+            title="Open full view"
           >
-            <span>↗</span>
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <path d="M8 2h4v4M12 2 6.5 7.5M5 3H2.5A.5.5 0 0 0 2 3.5v8a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5V9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </button>
         )}
       </div>
 
-      <div className="section">
-        <div className="tabs-wrap">
-          <div className="tabs">
-            {folders.map((folder) => {
-              const count = state?.folderTweetIds[folder.id]?.length ?? 0;
-              const isRenaming = renameDraft?.folderId === folder.id;
-              return (
-                <div key={folder.id} className="tab-slot">
-                  {isRenaming ? (
-                    <input
-                      ref={renameInputRef}
-                      className="tab-edit-input"
-                      value={renameDraft.value}
-                      onChange={(event) =>
-                        setRenameDraft((d) =>
-                          d ? { ...d, value: event.target.value } : d,
-                        )
-                      }
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") {
-                          void saveRename();
-                        }
-                        if (event.key === "Escape") {
-                          setRenameDraft(null);
-                        }
-                      }}
-                      maxLength={80}
-                      placeholder="Folder name"
-                    />
-                  ) : (
-                    <button
-                      type="button"
-                      className={`tab ${selectedFolder === folder.id ? "active" : ""}`}
-                      onClick={() => setSelectedFolder(folder.id)}
-                      onContextMenu={(e) => openTabContextMenu(e, folder.id)}
-                    >
-                      {folder.name} ({count})
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          <div className="row">
-            <input
-              value={newFolderName}
-              onChange={(event) => setNewFolderName(event.target.value)}
-              placeholder="New folder"
-              maxLength={80}
-            />
-            <button type="button" onClick={() => createFolder()}>
-              Create
-            </button>
-          </div>
+      {/* ── Folders ── */}
+      <div className="folders-panel">
+        <div className="tabs">
+          {folders.map((folder) => {
+            const count = state?.folderTweetIds[folder.id]?.length ?? 0;
+            const isRenaming = renameDraft?.folderId === folder.id;
+            return (
+              <div key={folder.id} className="tab-slot">
+                {isRenaming ? (
+                  <input
+                    ref={renameInputRef}
+                    className="tab-edit-input"
+                    value={renameDraft.value}
+                    onChange={(event) =>
+                      setRenameDraft((d) =>
+                        d ? { ...d, value: event.target.value } : d,
+                      )
+                    }
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") void saveRename();
+                      if (event.key === "Escape") setRenameDraft(null);
+                    }}
+                    maxLength={80}
+                    placeholder="Folder name"
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    className={`tab${selectedFolder === folder.id ? " active" : ""}`}
+                    onClick={() => setSelectedFolder(folder.id)}
+                    onContextMenu={(e) => openTabContextMenu(e, folder.id)}
+                  >
+                    {folder.name}
+                    {count > 0 && (
+                      <span style={{ opacity: 0.55, marginLeft: 5 }}>{count}</span>
+                    )}
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
 
-        {contextMenu && (
-          <div
-            ref={contextMenuRef}
-            className="folder-context-menu"
-            style={{
-              position: "fixed",
-              left: Math.min(contextMenu.x, window.innerWidth - 160),
-              top: Math.min(contextMenu.y, window.innerHeight - 120),
-            }}
-            role="menu"
-          >
-            <button
-              type="button"
-              className="menu-item"
-              role="menuitem"
-              onClick={() => {
-                const f = folders.find((x) => x.id === contextMenu.folderId);
-                if (f) startRenameFromContext(f);
-              }}
-            >
-              Rename
-            </button>
-            <button
-              type="button"
-              className="menu-item danger"
-              role="menuitem"
-              disabled={contextMenu.folderId === "default"}
-              onClick={() => {
-                const f = folders.find((x) => x.id === contextMenu.folderId);
-                if (f) void deleteFolderFromContext(f);
-              }}
-            >
-              Delete
-            </button>
-          </div>
-        )}
+        <div className="new-folder-row">
+          <input
+            value={newFolderName}
+            onChange={(event) => setNewFolderName(event.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") void createFolder(); }}
+            placeholder="New folder…"
+            maxLength={80}
+          />
+          <button type="button" onClick={() => createFolder()}>
+            Add
+          </button>
+        </div>
       </div>
 
-      <div className="section list">
+      {contextMenu && (
+        <div
+          ref={contextMenuRef}
+          className="folder-context-menu"
+          style={{
+            position: "fixed",
+            left: Math.min(contextMenu.x, window.innerWidth - 170),
+            top: Math.min(contextMenu.y, window.innerHeight - 110),
+          }}
+          role="menu"
+        >
+          <button
+            type="button"
+            className="menu-item"
+            role="menuitem"
+            onClick={() => {
+              const f = folders.find((x) => x.id === contextMenu.folderId);
+              if (f) startRenameFromContext(f);
+            }}
+          >
+            Rename
+          </button>
+          <button
+            type="button"
+            className="menu-item danger"
+            role="menuitem"
+            disabled={contextMenu.folderId === "default"}
+            onClick={() => {
+              const f = folders.find((x) => x.id === contextMenu.folderId);
+              if (f) void deleteFolderFromContext(f);
+            }}
+          >
+            Delete
+          </button>
+        </div>
+      )}
+
+      {/* ── Tweet list ── */}
+      <div className="tweet-list">
+        {filteredRows.length === 0 && (
+          <p className="tweet-empty">No saved tweets in this folder.</p>
+        )}
         {filteredRows.map((row) => (
           <article key={`${row.folderId}:${row.id}`} className="tweet">
-            <div className="meta">
-              <div className="meta-author">
+            <div className="tweet-header">
+              <div className="tweet-author">
                 <strong>{row.authorName || row.authorHandle || "Unknown"}</strong>
                 <span>{row.authorHandle}</span>
               </div>
-              {savedTweetShowsAttachmentIcon(row) ? (
+              {savedTweetShowsAttachmentIcon(row) && (
                 <span
                   className="tweet-attachment-icon"
-                  title="Image or video"
+                  title="Contains image or video"
                   aria-label="Tweet has image or video"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
+                    width="13"
+                    height="13"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -336,47 +347,53 @@ function App({ fullPage = false }: AppProps) {
                     strokeLinejoin="round"
                     aria-hidden
                   >
-                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21 15 16 10 5 21" />
                   </svg>
                 </span>
-              ) : null}
+              )}
             </div>
-            <p>{truncateText(row.text || "(No text extracted)")}</p>
-            <div className="meta meta-end">
+
+            <p className="tweet-body">
+              {truncateText(row.text || "(No text extracted)")}
+            </p>
+
+            <div className="tweet-footer">
               <a href={row.url} target="_blank" rel="noreferrer">
-                Open
+                View on X ↗
               </a>
-            </div>
-            <div className="row">
-              <select
-                onChange={(event) =>
-                  moveToFolder(row.id, row.folderId, event.target.value)
-                }
-                defaultValue=""
-              >
-                <option value="" disabled>
-                  Move to...
-                </option>
-                {folders
-                  .filter((folder) => folder.id !== row.folderId)
-                  .map((folder) => (
-                    <option key={folder.id} value={folder.id}>
-                      {folder.name}
-                    </option>
-                  ))}
-              </select>
-              <button
-                className="danger"
-                onClick={() => removeFromFolder(row.id, row.folderId)}
-              >
-                Remove
-              </button>
+              <div className="tweet-actions">
+                <select
+                  onChange={(event) =>
+                    moveToFolder(row.id, row.folderId, event.target.value)
+                  }
+                  defaultValue=""
+                >
+                  <option value="" disabled>
+                    Move…
+                  </option>
+                  {folders
+                    .filter((folder) => folder.id !== row.folderId)
+                    .map((folder) => (
+                      <option key={folder.id} value={folder.id}>
+                        {folder.name}
+                      </option>
+                    ))}
+                </select>
+                <button
+                  className="danger"
+                  onClick={() => removeFromFolder(row.id, row.folderId)}
+                >
+                  Remove
+                </button>
+              </div>
             </div>
           </article>
         ))}
       </div>
 
-      <p className="muted status">{feedback}</p>
+      <p className="status-bar">{feedback}</p>
     </div>
   );
 }
