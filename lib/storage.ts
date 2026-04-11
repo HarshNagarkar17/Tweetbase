@@ -1,3 +1,4 @@
+import { inferHasMediaFromUrls } from '@/lib/tweetMedia';
 import type { BookmarkState, Folder, SavedTweet } from '@/lib/types';
 
 export const BOOKMARK_STORAGE_KEY = 'bookmarkState';
@@ -5,11 +6,12 @@ export const BOOKMARK_STORAGE_KEY = 'bookmarkState';
 type StoredTweet = Omit<SavedTweet, 'hasMedia'> & Partial<Pick<SavedTweet, 'hasMedia'>>;
 
 function normalizeSavedTweet(raw: StoredTweet): SavedTweet {
-  const inferredFromUrls = (raw.mediaUrls?.length ?? 0) > 0;
+  const mediaUrls = raw.mediaUrls ?? [];
+  const inferred = inferHasMediaFromUrls(mediaUrls);
   return {
     ...raw,
-    mediaUrls: raw.mediaUrls ?? [],
-    hasMedia: raw.hasMedia ?? inferredFromUrls,
+    mediaUrls,
+    hasMedia: Boolean(raw.hasMedia) || inferred,
   };
 }
 
@@ -23,6 +25,23 @@ function normalizeBookmarkState(state: BookmarkState): BookmarkState {
 
 function stateNeedsTweetFieldMigration(state: BookmarkState): boolean {
   return Object.values(state.tweets).some((t) => (t as StoredTweet).hasMedia === undefined);
+}
+
+/** Persist when URL patterns imply media but stored hasMedia was false (or field missing). */
+function stateNeedsHasMediaRepair(before: BookmarkState, after: BookmarkState): boolean {
+  if (stateNeedsTweetFieldMigration(before)) {
+    return true;
+  }
+  for (const id of Object.keys(after.tweets)) {
+    const prev = before.tweets[id] as StoredTweet;
+    if (!prev) {
+      continue;
+    }
+    if (after.tweets[id].hasMedia && !(prev.hasMedia ?? false)) {
+      return true;
+    }
+  }
+  return false;
 }
 const DEFAULT_FOLDER_ID = 'default';
 
@@ -75,13 +94,11 @@ export async function readState(): Promise<BookmarkState> {
     return normalized;
   }
 
-  if (stateNeedsTweetFieldMigration(maybeState)) {
-    const normalized = normalizeBookmarkState(maybeState);
+  const normalized = normalizeBookmarkState(maybeState);
+  if (stateNeedsHasMediaRepair(maybeState, normalized)) {
     await writeState(normalized);
-    return normalized;
   }
-
-  return maybeState;
+  return normalized;
 }
 
 export async function writeState(state: BookmarkState): Promise<void> {

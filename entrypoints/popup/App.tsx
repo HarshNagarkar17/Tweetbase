@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { sendBookmarkMessage } from "@/lib/messaging";
 import { BOOKMARK_STORAGE_KEY } from "@/lib/storage";
+import { savedTweetShowsAttachmentIcon } from "@/lib/tweetMedia";
 import type { BookmarkState, Folder, SavedTweet } from "@/lib/types";
 import "./App.css";
 
@@ -317,7 +318,7 @@ function App({ fullPage = false }: AppProps) {
                 <strong>{row.authorName || row.authorHandle || "Unknown"}</strong>
                 <span>{row.authorHandle}</span>
               </div>
-              {row.hasMedia ? (
+              {savedTweetShowsAttachmentIcon(row) ? (
                 <span
                   className="tweet-attachment-icon"
                   title="Image or video"

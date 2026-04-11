@@ -1,5 +1,6 @@
 import { sendBookmarkMessage } from '@/lib/messaging';
 import { BOOKMARK_STORAGE_KEY } from '@/lib/storage';
+import { urlLooksLikeTweetMedia } from '@/lib/tweetMedia';
 import type { BookmarkState, Folder } from '@/lib/types';
 
 type TweetRecord = {
@@ -13,26 +14,46 @@ type TweetRecord = {
   url: string;
 };
 
-function tweetArticleHasMedia(article: HTMLElement): boolean {
-  if (article.querySelector('video')) {
-    return true;
-  }
+function collectMediaFromArticle(article: HTMLElement): { mediaUrls: string[]; hasMedia: boolean } {
+  const urls = new Set<string>();
+  let hasMedia = false;
+
+  const consider = (raw: string | null | undefined) => {
+    if (!raw?.trim()) {
+      return;
+    }
+    const u = raw.trim().split(/\s+/)[0];
+    urls.add(u);
+    if (urlLooksLikeTweetMedia(u)) {
+      hasMedia = true;
+    }
+  };
+
+  article.querySelectorAll('img').forEach((img) => {
+    const el = img as HTMLImageElement;
+    consider(el.currentSrc || img.getAttribute('src'));
+    const srcset = img.getAttribute('srcset');
+    if (srcset) {
+      for (const part of srcset.split(',')) {
+        consider(part.trim().split(/\s+/)[0]);
+      }
+    }
+  });
+
+  article.querySelectorAll('video').forEach((video) => {
+    hasMedia = true;
+    consider(video.getAttribute('poster'));
+    video.querySelectorAll('source').forEach((s) => consider(s.getAttribute('src')));
+  });
+
   if (article.querySelector('[data-testid="tweetPhoto"]')) {
-    return true;
+    hasMedia = true;
   }
-  if (article.querySelector('[data-testid="videoComponent"]')) {
-    return true;
+  if (article.querySelector('[data-testid="videoComponent"], [data-testid="videoPlayer"]')) {
+    hasMedia = true;
   }
-  if (article.querySelector('[data-testid="videoPlayer"]')) {
-    return true;
-  }
-  if (article.querySelector('img[src*="pbs.twimg.com/media"], img[src*="twimg.com/media"]')) {
-    return true;
-  }
-  if (article.querySelector('img[src*="amplify_video_thumb"], img[src*="ext_tw_video_thumb"]')) {
-    return true;
-  }
-  return false;
+
+  return { mediaUrls: [...urls], hasMedia };
 }
 
 const ACTION_CLASS = 'tbm-save-action';
@@ -135,20 +156,7 @@ function getTweetRecord(article: HTMLElement): TweetRecord | null {
   const timeEl = article.querySelector<HTMLTimeElement>('time');
   const statusUrl = statusLink.href.startsWith('http') ? statusLink.href : new URL(statusLink.getAttribute('href') || '', location.origin).toString();
 
-  const mediaUrls = new Set<string>();
-  article.querySelectorAll<HTMLImageElement>('img[src*="twimg.com/media"]').forEach((img) => {
-    if (img.src) mediaUrls.add(img.src);
-  });
-  article.querySelectorAll<HTMLImageElement>('img[src*="pbs.twimg.com/media"]').forEach((img) => {
-    if (img.src) mediaUrls.add(img.src);
-  });
-  article.querySelectorAll<HTMLVideoElement>('video').forEach((video) => {
-    if (video.poster) mediaUrls.add(video.poster);
-    const source = video.querySelector('source');
-    if (source?.src) mediaUrls.add(source.src);
-  });
-
-  const hasMedia = tweetArticleHasMedia(article);
+  const { mediaUrls, hasMedia } = collectMediaFromArticle(article);
 
   let authorHandle = '';
   const handleMatch = statusUrl.match(/https?:\/\/(?:x|twitter)\.com\/([^/]+)\/status\/\d+/i);
@@ -163,7 +171,7 @@ function getTweetRecord(article: HTMLElement): TweetRecord | null {
     authorHandle,
     authorName,
     timestamp: timeEl?.dateTime ?? '',
-    mediaUrls: [...mediaUrls],
+    mediaUrls,
     hasMedia,
     url: statusUrl,
   };
@@ -198,8 +206,11 @@ async function refreshState() {
   }
 }
 
-function createPanel(anchor: HTMLElement, tweet: TweetRecord, article: HTMLElement) {
+function createPanel(anchor: HTMLElement, article: HTMLElement) {
   closePanel();
+  if (!getTweetRecord(article)) {
+    return;
+  }
   const panel = document.createElement('div');
   panel.className = 'tbm-panel';
   panel.innerHTML = `
@@ -233,6 +244,11 @@ function createPanel(anchor: HTMLElement, tweet: TweetRecord, article: HTMLEleme
   const msg = panel.querySelector<HTMLDivElement>('.msg')!;
   panel.querySelector<HTMLButtonElement>('.tbm-cancel')?.addEventListener('click', () => closePanel());
   panel.querySelector<HTMLButtonElement>('.tbm-save')?.addEventListener('click', async () => {
+    const freshTweet = getTweetRecord(article);
+    if (!freshTweet) {
+      msg.textContent = 'Could not read tweet';
+      return;
+    }
     const folderId =
       panel.querySelector<HTMLInputElement>('input[name="tbm-folder"]:checked')?.value ?? folderCache[0]?.id;
     const newFolderName = panel.querySelector<HTMLInputElement>('.tbm-new-folder')?.value.trim() ?? '';
@@ -241,11 +257,11 @@ function createPanel(anchor: HTMLElement, tweet: TweetRecord, article: HTMLEleme
         type: 'saveTweet',
         folderId,
         newFolderName,
-        tweet,
+        tweet: freshTweet,
       });
       if (result.saved) {
         msg.textContent = 'Saved';
-        savedStatus.set(tweet.id, true);
+        savedStatus.set(freshTweet.id, true);
         updateSavedMarker(article, true);
         setTimeout(closePanel, 400);
       } else {
@@ -278,7 +294,7 @@ function installTweetButton(article: HTMLElement) {
     if (!folderCache.length) {
       await refreshState();
     }
-    createPanel(button, tweet, article);
+    createPanel(button, article);
   });
   actionGroup.appendChild(button);
   article.setAttribute(PROCESSED_ATTR, '1');
