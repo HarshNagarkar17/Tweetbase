@@ -30,9 +30,11 @@ a:hover {
 
 body {
   margin: 0;
-  min-width: 340px;
-  min-height: 560px;
   background: #000000;
+}
+
+body[data-page="popup"] {
+  overflow: hidden;
 }
 
 ::-webkit-scrollbar {

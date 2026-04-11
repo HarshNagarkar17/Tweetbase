@@ -26,20 +26,22 @@
 /* ── Layout ────────────────────────────────────────────────────────── */
 .app {
   width: 440px;
+  height: 560px;
   padding: 20px 16px 14px;
   color: var(--text-primary);
   background: var(--bg);
-  min-height: 560px;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  overflow: hidden;
 }
 
 .app.full-page {
   width: min(860px, 96vw);
+  height: auto;
   margin: 40px auto;
   padding: 0;
-  min-height: unset;
+  overflow: visible;
 }
 
 /* ── Header ────────────────────────────────────────────────────────── */
@@ -317,13 +319,16 @@ button.danger:hover {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 420px;
+  flex: 1;
+  min-height: 0;      /* critical: lets flex child shrink below content size */
   overflow-y: auto;
   padding-right: 2px;
 }
 
 .app.full-page .tweet-list {
-  max-height: unset;
+  flex: none;
+  min-height: unset;
+  overflow-y: visible;
 }
 
 .tweet-empty {
