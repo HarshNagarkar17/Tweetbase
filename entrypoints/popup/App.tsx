@@ -113,7 +113,6 @@ function App({ fullPage = false }: AppProps) {
       return;
     }
     setNewFolderName("");
-    setFeedback("Folder created.");
     await loadState();
   }
 
