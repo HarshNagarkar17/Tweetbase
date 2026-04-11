@@ -1,6 +1,6 @@
 {
-  "name": "wxt-react-starter",
-  "description": "manifest.json description",
+  "name": "tweetbase",
+  "description": "Save and organise tweets in folders, stored locally.",
   "private": true,
   "version": "0.0.0",
   "type": "module",

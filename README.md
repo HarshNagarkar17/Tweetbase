@@ -1,4 +1,4 @@
-# Tweet Bookmarker
+# TweetBase
 
 A browser extension that replaces X's flat bookmark system with a folder-based organizer — everything stored locally on your device.
 

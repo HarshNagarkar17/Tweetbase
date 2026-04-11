@@ -4,8 +4,8 @@ import { defineConfig } from 'wxt';
 export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   manifest: {
-    name: 'Twitter Bookmarker',
-    description: 'Save tweets into local folders.',
+    name: 'TweetBase',
+    description: 'Save and organise tweets in folders, stored locally.',
     permissions: ['storage'],
     host_permissions: ['*://x.com/*', '*://twitter.com/*'],
   },

@@ -202,7 +202,7 @@ function App({ fullPage = false }: AppProps) {
       {/* ── Header ── */}
       <div className="header">
         <div className="header-title">
-          <h1>Bookmarks</h1>
+          <h1>TweetBase</h1>
           <p className="muted">
             {folders.find((f) => f.id === selectedFolder)
               ? `${filteredRows.length} saved tweet${filteredRows.length !== 1 ? "s" : ""}`
