@@ -189,10 +189,21 @@ export function saveTweet(
   if (!targetFolder) {
     return { saved: false, reason: 'Folder does not exist' };
   }
+
+  // Remove from every other folder so the tweet lives in exactly one place.
+  for (const [existingFolderId, ids] of Object.entries(state.folderTweetIds)) {
+    if (existingFolderId !== folderId && ids.includes(tweet.id)) {
+      state.folderTweetIds[existingFolderId] = ids.filter((id) => id !== tweet.id);
+    }
+  }
+
   const list = state.folderTweetIds[folderId] ?? [];
   if (list.includes(tweet.id)) {
-    return { saved: false, reason: 'Tweet already saved in this folder' };
+    // Already in the target folder — update the stored data and return success.
+    state.tweets[tweet.id] = { ...tweet, savedAt: state.tweets[tweet.id]?.savedAt ?? nowIso() };
+    return { saved: true };
   }
+
   state.folderTweetIds[folderId] = [tweet.id, ...list];
   state.tweets[tweet.id] = {
     ...tweet,

@@ -61,7 +61,8 @@ const BADGE_CLASS = 'tbm-saved-badge';
 const PROCESSED_ATTR = 'data-tbm-processed';
 
 let folderCache: Folder[] = [];
-let savedStatus = new Map<string, boolean>();
+/** Maps tweetId → folderId for every saved tweet. */
+let savedStatus = new Map<string, string>();
 let openPanel: HTMLDivElement | null = null;
 
 function injectStyles() {
@@ -183,14 +184,8 @@ function updateSavedMarker(article: HTMLElement, isSaved: boolean) {
     button.classList.toggle('is-saved', isSaved);
     button.textContent = isSaved ? 'Saved' : 'Save';
   }
-  let badge = article.querySelector<HTMLSpanElement>(`.${BADGE_CLASS}`);
-  if (isSaved && !badge) {
-    badge = document.createElement('span');
-    badge.className = BADGE_CLASS;
-    badge.textContent = 'Bookmarked';
-    const group = article.querySelector('[role="group"]');
-    group?.appendChild(badge);
-  } else if (!isSaved && badge) {
+  const badge = article.querySelector<HTMLSpanElement>(`.${BADGE_CLASS}`);
+  if (!isSaved && badge) {
     badge.remove();
   }
 }
@@ -198,19 +193,23 @@ function updateSavedMarker(article: HTMLElement, isSaved: boolean) {
 async function refreshState() {
   const state = await sendBookmarkMessage<BookmarkState>({ type: 'getState' });
   folderCache = state.folders;
-  savedStatus = new Map<string, boolean>();
-  for (const ids of Object.values(state.folderTweetIds)) {
+  savedStatus = new Map<string, string>();
+  for (const [folderId, ids] of Object.entries(state.folderTweetIds)) {
     for (const id of ids) {
-      savedStatus.set(id, true);
+      savedStatus.set(id, folderId);
     }
   }
 }
 
 function createPanel(anchor: HTMLElement, article: HTMLElement) {
   closePanel();
-  if (!getTweetRecord(article)) {
+  const initialTweet = getTweetRecord(article);
+  if (!initialTweet) {
     return;
   }
+
+  const currentFolderId = savedStatus.get(initialTweet.id);
+
   const panel = document.createElement('div');
   panel.className = 'tbm-panel';
   panel.innerHTML = `
@@ -230,9 +229,14 @@ function createPanel(anchor: HTMLElement, article: HTMLElement) {
     row.innerHTML = `<input type="radio" name="tbm-folder" value="${folder.id}" /> <span>${folder.name}</span>`;
     foldersHost.appendChild(row);
   }
-  const firstRadio = panel.querySelector<HTMLInputElement>('input[name="tbm-folder"]');
-  if (firstRadio) {
-    firstRadio.checked = true;
+
+  // Pre-select the folder the tweet is currently saved in, or fall back to the first.
+  const targetId = currentFolderId ?? folderCache[0]?.id;
+  const targetRadio = panel.querySelector<HTMLInputElement>(
+    targetId ? `input[name="tbm-folder"][value="${targetId}"]` : 'input[name="tbm-folder"]',
+  );
+  if (targetRadio) {
+    targetRadio.checked = true;
   }
 
   const rect = anchor.getBoundingClientRect();
@@ -261,7 +265,7 @@ function createPanel(anchor: HTMLElement, article: HTMLElement) {
       });
       if (result.saved) {
         msg.textContent = 'Saved';
-        savedStatus.set(freshTweet.id, true);
+        savedStatus.set(freshTweet.id, folderId);
         updateSavedMarker(article, true);
         setTimeout(closePanel, 400);
       } else {
@@ -298,7 +302,7 @@ function installTweetButton(article: HTMLElement) {
   });
   actionGroup.appendChild(button);
   article.setAttribute(PROCESSED_ATTR, '1');
-  updateSavedMarker(article, savedStatus.get(tweet.id) === true);
+  updateSavedMarker(article, savedStatus.has(tweet.id));
 }
 
 function processTweets(root: ParentNode = document) {
